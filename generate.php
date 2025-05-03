@@ -88,13 +88,9 @@ class LinkGenerator {
 
             $shortlinkUrl = SITE_URL . '/x/' . $shortCode;
 
-            // Append fbclid parameter with unique value
-            $fbclid = 'IwAR' . bin2hex(random_bytes(12));
-            $shortlinkUrlWithParams = $shortlinkUrl . '?fbclid=' . $fbclid;
-
             return [
                 'success' => true,
-                'url' => $shortlinkUrlWithParams,
+                'url' => $shortlinkUrl,
                 'preview' => [
                     'title' => $this->ogData['title'],
                     'description' => $this->ogData['description'],
