@@ -107,6 +107,14 @@ class LinkGenerator {
         }
     }
 
+    private function validateInputs() {
+        return $this->smartlink &&
+               !empty($this->campaign) &&
+               !empty($this->ogData['title']) &&
+               !empty($this->ogData['description']) &&
+               $this->ogData['image'];
+    }
+
     private function generateShortCode() {
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         $code = '';

