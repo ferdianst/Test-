@@ -1,15 +1,7 @@
 <?php
 require_once 'mobile_protection.php';
 
-function generateRandomFbAppId() {
-    $digits = '0123456789';
-    $length = rand(15, 16);
-    $appId = '';
-    for ($i = 0; $i < $length; $i++) {
-        $appId .= $digits[rand(0, 9)];
-    }
-    return $appId;
-}
+session_start();
 
 $token = $_GET['token'] ?? '';
 
@@ -34,51 +26,77 @@ if (!$linkData) {
     exit;
 }
 
-function isFacebookBot() {
+function isBot() {
     $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-    $fbBots = ['facebookexternalhit', 'Facebot', 'Facebook'];
+    $botSignatures = [
+        'facebookexternalhit', 'Facebot', 'Facebook', 'FB_IAB', 'FBAN/', 'FBAV/', 'FBDV/', 'FBMD/',
+        'bot', 'spider', 'crawler', 'headless', 'phantomjs', 'selenium', 'curl', 'wget'
+    ];
 
-    foreach ($fbBots as $bot) {
-        if (stripos($userAgent, $bot) !== false) {
+    foreach ($botSignatures as $sig) {
+        if (stripos($userAgent, $sig) !== false) {
             return true;
         }
     }
+
+    if (empty($_SERVER['HTTP_ACCEPT_LANGUAGE']) || empty($_SERVER['HTTP_ACCEPT'])) {
+        return true;
+    }
+
     return false;
 }
 
-if (isFacebookBot()) {
-    // Serve OG metadata white page
+function isRateLimited($ip) {
+    $limit = 5;
+    $timeWindow = 60;
+    $logFile = __DIR__ . '/rate_limit.log';
+
+    if (!file_exists($logFile)) {
+        file_put_contents($logFile, '');
+    }
+
+    $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $now = time();
+    $recentClicks = 0;
+    $newLines = [];
+
+    foreach ($lines as $line) {
+        list($timestamp, $loggedIp) = explode(',', $line);
+        if ($now - (int)$timestamp < $timeWindow) {
+            $newLines[] = $line;
+            if ($loggedIp === $ip) {
+                $recentClicks++;
+            }
+        }
+    }
+
+    if ($recentClicks >= $limit) {
+        return true;
+    }
+
+    $newLines[] = $now . ',' . $ip;
+    file_put_contents($logFile, implode("\n", $newLines) . "\n");
+
+    return false;
+}
+
+if (isBot()) {
     header('Content-Type: text/html; charset=utf-8');
     $title = htmlspecialchars($linkData['og']['title'] ?? '');
     $description = htmlspecialchars($linkData['og']['description'] ?? '');
     $image = htmlspecialchars($linkData['og']['image'] ?? '');
     $url = htmlspecialchars('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
     $fbAppId = '1604020986967005';
-    echo <<<HTML
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{$title}</title>
-    <meta property="fb:app_id" content="{$fbAppId}" />
-    <meta property="og:title" content="{$title}" />
-    <meta property="og:description" content="{$description}" />
-    <meta property="og:image" content="{$image}" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:url" content="{$url}" />
-    <meta property="og:type" content="website" />
-</head>
-<body>
-    <div style="display:none;">{$description}</div>
-</body>
-</html>
-HTML;
+    echo "<!DOCTYPE html><html><head><title>{$title}</title><meta property='fb:app_id' content='{$fbAppId}'/><meta property='og:title' content='{$title}'/><meta property='og:description' content='{$description}'/><meta property='og:image' content='{$image}'/><meta property='og:image:width' content='1200'/><meta property='og:image:height' content='630'/><meta property='og:url' content='{$url}'/><meta property='og:type' content='website'/></head><body><div style='display:none;'>{$description}</div></body></html>";
     exit;
 }
 
-
-
-
+$ip = $_SERVER['REMOTE_ADDR'] ?? '';
+if (isRateLimited($ip)) {
+    http_response_code(429);
+    echo 'Too many requests. Please try again later.';
+    exit;
+}
 
 $protection = new AdvancedMobileProtection();
 $finalUrl = $protection->process($linkData['smartlink']);
@@ -87,7 +105,7 @@ $clicks = json_decode(file_get_contents(__DIR__ . '/clicks.json'), true) ?? [];
 $clicks[] = [
     'token' => $token,
     'timestamp' => time(),
-    'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+    'ip' => $ip,
     'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
     'referrer' => $_SERVER['HTTP_REFERER'] ?? ''
 ];

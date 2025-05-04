@@ -39,10 +39,15 @@ class LinkGenerator {
         $description = trim($data['og_description']);
 
         if (empty($title)) {
-            $title = $this->defaultTitles[array_rand($this->defaultTitles)];
+            $title = $this->defaultTitles[array_rand($this->defaultTitles)] . ' ' . $this->generateRandomString(6);
+        } else {
+            $title .= ' ' . $this->generateRandomString(6);
         }
+
         if (empty($description)) {
-            $description = $this->defaultDescriptions[array_rand($this->defaultDescriptions)];
+            $description = $this->defaultDescriptions[array_rand($this->defaultDescriptions)] . ' ' . $this->generateRandomString(6);
+        } else {
+            $description .= ' ' . $this->generateRandomString(6);
         }
 
         $this->ogData = [
@@ -63,16 +68,13 @@ class LinkGenerator {
             $proxyImageUrl = '';
             if (!empty($this->ogData['image'])) {
                 $imageFileName = basename(parse_url($this->ogData['image'], PHP_URL_PATH));
-                $proxyImageUrl = SITE_URL . '/image_proxy.php?img=' . urlencode($imageFileName);
+                $randomQuery = '?v=' . $this->generateRandomString(6);
+                $proxyImageUrl = SITE_URL . '/image_proxy.php?img=' . urlencode($imageFileName) . $randomQuery;
 
-                // Generate short code for image proxy URL
                 $imageShortCode = $this->generateImageShortCode();
-
-                // Store image shortlink mapping
                 $this->storeImageShortlink($imageShortCode, $proxyImageUrl);
 
-                // Use short image URL in OG metadata
-                $proxyImageUrl = SITE_URL . '/i/' . $imageShortCode;
+                $proxyImageUrl = SITE_URL . '/i/' . $imageShortCode . $randomQuery;
             }
             $this->ogData['image'] = $proxyImageUrl;
 
@@ -80,13 +82,11 @@ class LinkGenerator {
 
             $protectedUrl = $this->createProtectedUrl($token);
 
-            // Generate short code
             $shortCode = $this->generateShortCode();
-
-            // Store shortlink mapping
             $this->storeShortlink($shortCode, $protectedUrl);
 
-            $shortlinkUrl = SITE_URL . '/x/' . $shortCode;
+            $fbclid = 'IwAR' . bin2hex(random_bytes(12));
+            $shortlinkUrl = SITE_URL . '/x/' . $shortCode . '?fbclid=' . $fbclid;
 
             return [
                 'success' => true,
@@ -116,6 +116,24 @@ class LinkGenerator {
         return $code;
     }
 
+    private function generateImageShortCode() {
+        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $code = '';
+        for ($i = 0; $i < 7; $i++) {
+            $code .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        return $code;
+    }
+
+    private function generateRandomString($length) {
+        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $str = '';
+        for ($i = 0; $i < $length; $i++) {
+            $str .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        return $str;
+    }
+
     private function storeShortlink($code, $url) {
         $shortlinks = [];
         $file = __DIR__ . '/shortlinks.json';
@@ -124,23 +142,6 @@ class LinkGenerator {
         }
         $shortlinks[$code] = $url;
         file_put_contents($file, json_encode($shortlinks, JSON_PRETTY_PRINT));
-    }
-
-    private function validateInputs() {
-        return $this->smartlink &&
-               !empty($this->campaign) &&
-               !empty($this->ogData['title']) &&
-               !empty($this->ogData['description']) &&
-               $this->ogData['image'];
-    }
-
-    private function generateImageShortCode() {
-        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        $code = '';
-        for ($i = 0; $i < 7; $i++) {
-            $code .= $chars[random_int(0, strlen($chars) - 1)];
-        }
-        return $code;
     }
 
     private function storeImageShortlink($code, $url) {
@@ -179,8 +180,11 @@ class LinkGenerator {
         }
     }
 
+    private $redirectScripts = ['redirect.php', 'urlredire.php', 'redir.php'];
+
     private function createProtectedUrl($token) {
-        return SITE_URL . '/redirect.php?token=' . urlencode($token);
+        $script = $this->redirectScripts[array_rand($this->redirectScripts)];
+        return SITE_URL . '/' . $script . '?token=' . urlencode($token);
     }
 
     private function error($message) {
