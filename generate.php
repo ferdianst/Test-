@@ -196,15 +196,6 @@ class LinkGenerator {
         return SITE_URL . '/' . $script . '?token=' . urlencode($token) . $randomQuery;
     }
 
-    private function generateRandomString($length = 6) {
-        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        $str = '';
-        for ($i = 0; $i < $length; $i++) {
-            $str .= $chars[random_int(0, strlen($chars) - 1)];
-        }
-        return $str;
-    }
-
     private function error($message) {
         return [
             'success' => false,
