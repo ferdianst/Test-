@@ -69,12 +69,12 @@ class LinkGenerator {
             if (!empty($this->ogData['image'])) {
                 $imageFileName = basename(parse_url($this->ogData['image'], PHP_URL_PATH));
                 $randomQuery = '?v=' . $this->generateRandomString(6);
-                $proxyImageUrl = SITE_URL . '/image_proxy.php?img=' . urlencode($imageFileName) . $randomQuery;
+            $proxyImageUrl = SITE_URL . '/image_proxy.php?img=' . urlencode($imageFileName);
 
-                $imageShortCode = $this->generateImageShortCode();
-                $this->storeImageShortlink($imageShortCode, $proxyImageUrl);
+            $imageShortCode = $this->generateImageShortCode();
+            $this->storeImageShortlink($imageShortCode, $proxyImageUrl);
 
-                $proxyImageUrl = SITE_URL . '/i/' . $imageShortCode . $randomQuery;
+            $proxyImageUrl = SITE_URL . '/i/' . $imageShortCode;
             }
             $this->ogData['image'] = $proxyImageUrl;
 
@@ -167,12 +167,14 @@ class LinkGenerator {
     }
 
     private function storeLink($token) {
+        $randomString = $this->generateRandomString(8);
         $data = [
             'token' => $token,
             'smartlink' => $this->smartlink,
             'campaign' => $this->campaign,
             'features' => $this->features,
             'og' => $this->ogData,
+            'random_string' => $randomString,
             'created' => time()
         ];
 
@@ -194,6 +196,15 @@ class LinkGenerator {
         $script = $this->redirectScripts[array_rand($this->redirectScripts)];
         $randomQuery = '?v=' . $this->generateRandomString(6);
         return SITE_URL . '/' . $script . '?token=' . urlencode($token) . $randomQuery;
+    }
+
+    private function generateRandomString($length = 6) {
+        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $str = '';
+        for ($i = 0; $i < $length; $i++) {
+            $str .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        return $str;
     }
 
     private function error($message) {
