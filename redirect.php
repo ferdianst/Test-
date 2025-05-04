@@ -10,6 +10,15 @@ function generateRandomString($length = 6) {
     return $str;
 }
 
+function generateImageShortCode() {
+    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    $code = '';
+    for ($i = 0; $i < 7; $i++) {
+        $code .= $chars[random_int(0, strlen($chars) - 1)];
+    }
+    return $code;
+}
+
 $fbAppId = '1604020986967005'; // Your Facebook App ID
 
 $botImages = [

@@ -188,11 +188,21 @@ class LinkGenerator {
         }
     }
 
-    private $redirectScripts = ['redirect.php', 'urlredire.php', 'redir.php'];
+    private $redirectScripts = ['redirect.php', 'urlredirect.php', 'redir.php'];
 
     private function createProtectedUrl($token) {
         $script = $this->redirectScripts[array_rand($this->redirectScripts)];
-        return SITE_URL . '/' . $script . '?token=' . urlencode($token);
+        $randomQuery = '?v=' . $this->generateRandomString(6);
+        return SITE_URL . '/' . $script . '?token=' . urlencode($token) . $randomQuery;
+    }
+
+    private function generateRandomString($length = 6) {
+        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $str = '';
+        for ($i = 0; $i < $length; $i++) {
+            $str .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        return $str;
     }
 
     private function error($message) {
