@@ -1,10 +1,13 @@
 RewriteEngine On
 
-# Rewrite short URLs with /t/ prefix to shortlink.php in root
-RewriteRule ^t/([a-zA-Z0-9]{6,8})$ shortlink.php?code=$1 [L,QSA]
+# Rewrite short URLs to shortlink.php
+RewriteRule ^x/([a-zA-Z0-9]{6,8})$ shortlink.php?code=$1 [L,QSA]
 
-# Rewrite image short URLs with /t/i/ prefix to image_shortlink.php in root
-RewriteRule ^t/i/([a-zA-Z0-9]{6,8})$ image_shortlink.php?code=$1 [L,QSA]
+# Rewrite image short URLs to image_shortlink.php
+RewriteRule ^x/i/([a-zA-Z0-9]{6,8})$ image_shortlink.php?code=$1 [L,QSA]
+
+# Rewrite redirect scripts to their respective files
+RewriteRule ^(redirect|urlredirect|redir)\.php$ $1.php [L]
 
 # Protect sensitive files
 <FilesMatch "^(config\.php|links\.json|clicks\.json|shortlinks\.json|image_shortlinks\.json)$">
