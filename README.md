@@ -1,85 +1,64 @@
-
-Built by https://www.blackbox.ai
-
----
-
 # Advanced CPA Link Generator
 
-## Project Overview
+This project is a comprehensive CPA (Cost Per Action) link generator tool designed to optimize affiliate marketing campaigns with advanced features to maximize conversions and protect against bot detection, especially from Facebook.
 
-The Advanced CPA Link Generator is a PHP-based application designed to generate protected links for Cost Per Action (CPA) campaigns. It simulates mobile devices, manages Facebook-specific parameters, and provides a user-friendly interface to create, manage, and track personalized smart links for different campaigns.
+## Key Features
 
-## Installation
+- **Dynamic Link Generation:**  
+  Generates unique, short CPA tracking links with randomized parameters to avoid spam detection and improve tracking accuracy.
 
-To install the project, follow these steps:
+- **Facebook Bot Protection:**  
+  Detects Facebook bots (both desktop and mobile) and serves them a clean, minimal white page with dynamic Open Graph (OG) metadata to prevent your CPA offer URLs from being flagged or blocked.
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/yourusername/advanced-cpa-link-generator.git
-   cd advanced-cpa-link-generator
-   ```
+- **Mobile and Desktop Device Simulation:**  
+  Simulates real mobile and desktop devices with realistic user-agent strings, headers, and fingerprinting to mimic genuine user traffic.
 
-2. **Set up a local server**:
-   Ensure you have a web server (like Apache or Nginx) with PHP support. You can use tools like XAMPP or MAMP to set this up.
+- **Image Proxy and Shortlinking:**  
+  Proxies OG images through a secure server and generates dynamic shortlinks for images, ensuring privacy and preventing direct exposure of original image URLs.
 
-3. **Configure the environment**:
-   Place the project files into the server's document root. Ensure the `uploads` directory is writable by the web server:
-   ```bash
-   mkdir uploads
-   chmod 755 uploads
-   ```
+- **JavaScript Challenge Verification:**  
+  Implements a JavaScript-based human verification challenge for suspicious visitors to further block bots without impacting real users.
 
-4. **Database setup**:
-   If your application requires a database setup, ensure to create a database and update the configuration settings accordingly (not implemented directly in this project).
+- **Comprehensive Logging:**  
+  Logs all clicks and verification attempts for detailed analytics and monitoring.
 
-5. **Run the application**:
-   Open a web browser and navigate to the URL where you hosted the application, e.g., `http://localhost/advanced-cpa-link-generator/index.html`.
+- **Flexible Configuration:**  
+  Supports fixed or dynamic campaign names, customizable OG metadata, and multiple redirect script options for obfuscation.
+
+## Recent Updates
+
+- Added dynamic random strings appended to OG titles, descriptions, and image URLs for uniqueness.
+- Implemented multi-layer Facebook bot detection with separate handling for desktop and mobile bots.
+- Integrated image proxy shortlinking with dynamic shortcodes.
+- Added JavaScript challenge verification flow for enhanced bot filtering.
+- Improved error handling and logging across all components.
+- Updated .htaccess with comprehensive rewrite and security rules.
+- Enhanced GitHub deployment support with detailed instructions.
 
 ## Usage
 
-- Open the `index.html` page in a web browser.
-- Fill in the required fields, including the title, description, and image URL for your CPA link.
-- Select the protection features you wish to apply.
-- Click the **Generate Protected Link** button.
-- Your encoded link will display, and you'll have the option to copy it to your clipboard.
+1. Open `index.html` in your browser.
+2. Enter your Trafee Smartlink URL (or use the fixed URL in the code).
+3. Customize your campaign's OG title, description, and image or select from the image manager.
+4. Choose protection features as needed.
+5. Generate your protected shortlink.
+6. Share the generated link on social media platforms like Facebook.
+7. Monitor clicks and conversions via the logs and your CPA platform.
 
-## Features
+## Deployment
 
-- **Mobile Device Simulation**: Simulates various mobile devices to ensure proper tracking and user engagement.
-- **Facebook App Protection**: Sets the necessary headers for Facebook app compatibility.
-- **Browser Fingerprint Rotation**: Prevents tracking via browser fingerprints to ensure user privacy.
-- **User-friendly Interface**: Easy-to-use form for generating smart links.
-- **Image Management**: Upload and manage images for your campaigns within the application.
+- Ensure your web server supports `.htaccess` and mod_rewrite.
+- Place all project files in your web root or appropriate directory.
+- Configure your domain and SSL certificates properly.
+- Add your GitHub repository as remote and push updates regularly.
 
-## Dependencies
+## Notes
 
-No external dependencies are declared in the project, but it relies on standard PHP functions for runtime.
-
-## Project Structure
-
-```
-/advanced-cpa-link-generator
-│
-├── index.html             # User interface for link generation
-├── mobile_protection.php  # PHP class for mobile device protection logic
-├── redirect.php           # Handling redirects and link protection
-├── generate.php           # Link generation logic and response handling
-├── verify.php             # Verification for bot protection
-├── verify_challenge.php    # Challenge response for verifying user session
-├── image_proxy.php        # Proxy for serving uploaded images
-├── image_manager.html     # UI for managing image uploads
-├── upload_image.php       # Logic for handling image uploads
-├── list_images.php        # Endpoint for listing uploaded images
-├── clicks.json            # JSON file for storing click data
-├── links.json             # JSON file for storing generated link data
-├── tier3_countries.json   # List of countries for geo-targeting
-└── uploads/               # Directory for storing uploaded images
-```
-
-## License
-
-This project is open-source and available for use. Feel free to contribute by forking the repository and creating pull requests.
+- Facebook bots receive a unique white page with dynamic OG metadata to prevent spam detection.
+- Real users are redirected with full protection and tracking.
+- Image uploads are moderated and proxied for security and privacy.
+- The system is designed to be extensible and customizable for various CPA networks.
 
 ---
 
-If you have any questions or issues while using the application, please feel free to create an issue in the repository. Happy generating!
+For any questions or support, please contact the project maintainer.
